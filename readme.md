@@ -93,6 +93,12 @@ prompt pure
 | **`PURE_GIT_DOWN_ARROW`**        | Defines the git down arrow symbol.                                                             | `⇣`            |
 | **`PURE_GIT_UP_ARROW`**          | Defines the git up arrow symbol.                                                               | `⇡`            |
 
+## Colors
+
+Colors can be changed by using `zstyle` with the pattern
+`:prompt:pure:$color_name` and style `color`. The availaible color names are: `branch`, `error`, `exec_time`, `git_arrow`, `path`, `root`, `success` and
+`user`.
+
 ## Example
 
 ```sh
@@ -102,6 +108,8 @@ autoload -U promptinit; promptinit
 
 # optionally define some options
 PURE_CMD_MAX_EXEC_TIME=10
+# change some colors
+zstyle :prompt:pure:success color green
 
 prompt pure
 ```

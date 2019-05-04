@@ -108,14 +108,14 @@ prompt_pure_preprompt_render() {
 
 	# Set color for git branch/dirty status, change color if dirty checking has
 	# been delayed.
-	local git_color=242
+	local git_color=$prompt_pure_colors[branch]
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
 	# Initialize the preprompt array.
 	local -a preprompt_parts
 
 	# Set the path.
-	preprompt_parts+=('%F{blue}%~%f')
+	preprompt_parts+=('%F{${prompt_pure_colors[path]}}%~%f')
 
 	# Add git branch and dirty status info.
 	typeset -gA prompt_pure_vcs_info
@@ -124,13 +124,13 @@ prompt_pure_preprompt_render() {
 	fi
 	# Git pull/push arrows.
 	if [[ -n $prompt_pure_git_arrows ]]; then
-		preprompt_parts+=('%F{cyan}${prompt_pure_git_arrows}%f')
+		preprompt_parts+=('%F{${prompt_pure_colors[git_arrow]}}${prompt_pure_git_arrows}%f')
 	fi
 
 	# Username and machine, if applicable.
 	[[ -n $prompt_pure_state[username] ]] && preprompt_parts+=('${prompt_pure_state[username]}')
 	# Execution time.
-	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
+	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{${prompt_pure_colors[exec_time]}}${prompt_pure_cmd_exec_time}%f')
 
 	local cleaned_ps1=$PROMPT
 	local -H MATCH MBEGIN MEND
@@ -543,10 +543,10 @@ prompt_pure_state_setup() {
 	fi
 
 	# show username@host if logged in through SSH
-	[[ -n $ssh_connection ]] && username='%F{242}%n@%m%f'
+	[[ -n $ssh_connection ]] && username='%F{${prompt_pure_colors[user]}}%n@%m%f'
 
 	# show username@host if root, with username in white
-	[[ $UID -eq 0 ]] && username='%F{white}%n%f%F{242}@%m%f'
+	[[ $UID -eq 0 ]] && username='%F{${prompt_pure_colors[root]}}%n%f%F{242}@%m%f'
 
 	typeset -gA prompt_pure_state
 	prompt_pure_state=(
@@ -582,6 +582,27 @@ prompt_pure_setup() {
 	# to be available, it was added in Zsh 5.3.
 	autoload -Uz +X add-zle-hook-widget 2>/dev/null
 
+	# most used colors
+	typeset -gA prompt_pure_colors
+	prompt_pure_colors=(
+		branch		242
+		error		red
+		exec_time	yellow
+		git_arrow	cyan
+		path		blue
+		root		white
+		success		magenta
+		user		242
+	)
+	# modify default colors if set by the user
+	local color_temp
+	for key val in ${(kv)prompt_pure_colors}; do
+		if ! zstyle -T ":prompt:pure:$key" color; then
+			zstyle -s ":prompt:pure:$key" color color_temp
+			prompt_pure_colors[$key]=$color_temp
+		fi
+	done
+
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
@@ -598,7 +619,7 @@ prompt_pure_setup() {
 	PROMPT='%(12V.%F{242}%12v%f .)'
 
 	# prompt turns red if the previous command didn't exit with 0
-	PROMPT+='%(?.%F{magenta}.%F{red})${prompt_pure_state[prompt]}%f '
+	PROMPT+='%(?.%F{${prompt_pure_colors[success]}}.%F{${prompt_pure_colors[error]}})${prompt_pure_state[prompt]}%f '
 
 	# Store prompt expansion symbols for in-place expansion via (%). For
 	# some reason it does not work without storing them in a variable first.
